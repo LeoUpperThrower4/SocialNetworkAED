@@ -41,7 +41,12 @@ while True:
                     if not user2:
                         print("Usuário não encontrado")
                     else:
-                        weight = input("Informe o \"peso\" da conexão (fa)milia, (co)nhecido, (cl)iente, (a)migo): ")
+                        strText = 'Informe o "peso" da conexão: '
+                        if (user2.value['type'] == 'company' or user.value['type'] == 'company'):
+                            strText += '(cl)iente'
+                        else:
+                            strText += '(fa)mília, (co)nhecido, (a)migo'
+                        weight = input(strText + ': ')
                         if weight == 'fa':
                             weight = 'family'
                             db.addFamily(user, user2)
@@ -66,7 +71,7 @@ while True:
                 elif command == "3":
                     search = input("Pesquisa: ")
                     searchKey = input("Chave de pesquisa: ")
-                    searchResults = db.dumbSearch(searchKey, search)
+                    searchResults = db.BFS(user, searchKey, search)
                     print(searchResults)
                 elif command == "4":
                     db.saveGraph()

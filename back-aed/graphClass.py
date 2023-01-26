@@ -37,7 +37,7 @@ class Vertex:
         # Retorna o dicionário contendo todas as relações do nodo e uma string interpolada
         return self.adjacent, string
 
-    def copy(self):
+    def formatObj(self):
         keys = self.value.keys()
         copy = {}
         for key in keys:
@@ -150,8 +150,8 @@ class Graph:
 
     def BFS(self, start=None, visible=True, testFunction=None):
         if start:
-            if start in self.vertices:
-                start = self.vertices[start]
+            if start.key in self.vertices.keys():
+                start = self.vertices[start.key]
             else:
                 return 'Vértice não existe'
         else:
@@ -164,10 +164,8 @@ class Graph:
             vertex = queue[0]
             del queue[0]
             if not visited[vertex]:
-                if visible:
-                    print(vertex)
                 if testFunction and testFunction(vertex):
-                    matches.append(vertex)
+                    matches.append(vertex.formatObj())
                 visited[vertex] = 1
                 queue += [v[0] for v in vertex.adjacent.values()]
         return matches

@@ -62,9 +62,9 @@ class SimpleNet:
          {"email": email, "name": name,  "password": password,
             "private": privateList,
             "type": tipo})
-        self.saveGraph()        
+        self.saveGraph()    
 
-    def BFS(self, user, key, value, person=True):
+    def BFS(self, user, key, value):
         """
         Perform BFS to find user[key] = value
         """
@@ -72,7 +72,8 @@ class SimpleNet:
             matches = self.G.BFS(
                 user, True, lambda v: value in v.key)
         else:
-            matches = self.G.BFS(user, True, lambda v: key not in v.value["private"] and value in v.value.key )
+            matches = self.G.BFS(user, True, lambda v: v.value['private'] and value in v.value[key])
+
         return matches
 
     def getConnection(self, user1, user2):
@@ -112,29 +113,6 @@ class SimpleNet:
         self.G.addEdge(user1.key, user2.key, weight="client")
         self.saveGraph()
 
-    def removeFriendship(self, user1, user2):
-        """
-        Remove edge between two users
-        """
-        self.G.removeEdge(user1.key, user2.key)
-        self.G.removeEdge(user2.key, user1.key)
-        self.saveGraph()
-
-    def removeAcquaintance(self, user1, user2):
-        """
-        Remove edge between two users
-        """
-        self.G.removeEdge(user1.key, user2.key)
-        self.saveGraph()
-
-    def removeFamily(self, user1, user2):
-        """
-        Remove edge between two users
-        """
-        self.G.removeEdge(user1.key, user2.key)
-        self.G.removeEdge(user2.key, user1.key)
-        self.saveGraph()
-
     def removeClient(self, user1, user2):
         """
         Remove edge between two users
@@ -142,10 +120,15 @@ class SimpleNet:
         self.G.removeEdge(user1.key, user2.key)
         self.saveGraph()
 
-    def getAllConnections(self, user):
-        # connections = copy.deepcopy(user.adjacent())
-        print(user.adjacent)
-        # return connections
+    def removeConnection(self, user1, user2):
+        """
+        Remove edge between two users
+        """
+        connectionType = self.getConnection(user1, user2)
+        self.G.removeEdge(user1.key, user2.key)
+        if connectionType in ["friend", "family"]:
+            self.G.removeEdge(user2.key, user1.key)
+        self.saveGraph()
 
     def subGraph(self, user, levels):
         """
