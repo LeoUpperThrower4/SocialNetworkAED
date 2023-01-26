@@ -1,14 +1,25 @@
 import matplotlib.pyplot as plt
 from time import sleep
-from app import app, db
+from app import db
 
 plt.figure()
 
 while True:
     command = input("Escreava um comando: (1) logar, (2) criar conta, (3) sair: ")
     if command == "3":
-        database.dump_to_pkl()
+        db.saveGraph()
         break
+    elif command == "2":
+        name = input("Nome: ")
+        email = input("Email: ")
+        password = input("Senha: ")
+        hasPrivateName = input("Nome privado? (s/n): ") == 's'
+        isCompany = input("É uma empresa? (s/n): ") == 's'
+        response = db.createAccount(email, password, 'company' if isCompany else 'person', name, hasPrivateName)
+        if response == 'ALREADY_SIGNED_UP':
+            print("Usuário já cadastrado")
+        else:
+            print("Criado com sucesso")
     elif command == "1":
         email = input("Email: ")
         password = input("Senha: ")
@@ -20,9 +31,9 @@ while True:
         else:
             print("Logado com sucesso")
             while True:
-                command = input("Escreva um comando: (1) adicionar, (2) remover, (3) encontrar, (4) gerar grafo, (5) sair: ")
-                if command == "5":
-                    database.dump_to_pkl()
+                command = input("Escreva um comando: (1) conectar, (2) desconectar, (3) encontrar, (4) gerar grafo, (9) sair: ")
+                if command == "9":
+                    db.saveGraph()
                     break
                 elif command == "1":
                     email = input("Email: ")
@@ -30,7 +41,19 @@ while True:
                     if not user2:
                         print("Usuário não encontrado")
                     else:
-                        db.addConnection(user, user2)
+                        weight = input("Informe o \"peso\" da conexão (fa)milia, (co)nhecido, (cl)iente, (a)migo): ")
+                        if weight == 'fa':
+                            weight = 'family'
+                            db.addFamily(user, user2)
+                        elif weight == 'co':
+                            db.addAcquaintance(user, user2)
+                        elif weight == 'cl':
+                            db.addClient(user, user2)
+                        elif weight == 'a':
+                            db.addFriendship(user, user2)
+                        else:
+                            print("Peso inválido")
+                            continue
                         print("Adicionado com sucesso")
                 elif command == "2":
                     email = input("Email: ")
@@ -46,7 +69,10 @@ while True:
                     searchResults = db.dumbSearch(searchKey, search)
                     print(searchResults)
                 elif command == "4":
-                    db.generateGraph(user)
+                    db.saveGraph()
+                    db.saveGraphImg(user)
+                    plt.show()
+                    db.saveGraphImg(user, levels=2)
                     plt.show()
                 else:
                     print("Comando inválido")

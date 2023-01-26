@@ -2,7 +2,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pickle
 
-
 class Vertex:
     def __init__(self, key, value):
         self.key = key
@@ -173,29 +172,6 @@ class Graph:
                 queue += [v[0] for v in vertex.adjacent.values()]
         return matches
 
-    def DFS_rec(self, vertex, visible, visited, testFunction=None, matches=[]):
-        if not visited[vertex]:
-            if visible:
-                print(vertex)
-            if testFunction and testFunction(vertex):
-                matches.append(vertex)
-            visited[vertex] = 1
-            for v in vertex.adjacent.values():
-                self.DFS_rec(v[0], visible, visited, testFunction, matches)
-
-    def DFS(self, start, visible=True, testFunction=None):
-        if start:
-            if start in self.vertices:
-                start = self.vertices[start]
-            else:
-                return 'Vértice não existe'
-        else:
-            start = next(iter(self.vertices.values()))
-        matches = []
-        self.DFS_rec(start, visible, visited=dict.fromkeys(
-            self.vertices.values(), 0), testFunction=testFunction, matches=matches)
-        return matches
-
     def getVertices(self):
         return self.vertices.keys()
 
@@ -210,23 +186,3 @@ class Graph:
     def dumpToPkl(self, filepath):
         with open(filepath, "wb") as outp:
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
-
-
-if __name__ == "__main__":
-
-    ls = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']
-    g = Graph()
-    vs = [g.addVertex(i, ls[i]) for i in range(1, 9)]
-    g.addEdge(1, 2)
-    g.addEdge(1, 3)
-    g.addEdge(3, 4)
-    g.addEdge(3, 5)
-    g.addEdge(4, 2)
-    g.addEdge(4, 5)
-    g.addEdge(4, 6)
-    g.addEdge(4, 8)
-    g.addEdge(6, 5)
-    g.addEdge(7, 2)
-    g.addEdge(8, 7)
-
-    g.getEdges()

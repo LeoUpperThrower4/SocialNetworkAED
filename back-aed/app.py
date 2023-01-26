@@ -1,11 +1,8 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 from socialNet import SimpleNet
-import json
 
-# app = Flask(__name__)
-# CORS(app)
 db = SimpleNet()
+relations = []
+entities = []
 
 def signup(name, email, password, hasPrivateName, hasPrivateEmail, isCompany):
     tipo = 'person'
@@ -18,11 +15,7 @@ def signup(name, email, password, hasPrivateName, hasPrivateEmail, isCompany):
     else:
         return "", 200
 
-@app.route('/login', methods=['POST'])
-def login():
-    body = json.loads(request.data.decode())
-    email = body['email']
-    password = body['password']
+def login(email, password):
     user = db.getUser(email)
     if not user:
         return "Invalid information", 400
@@ -31,16 +24,11 @@ def login():
     userCopy = user.copy()
     return jsonify(userCopy), 200
 
-@app.route('/relations', methods=['GET'])
-def load_relations():
-    userName = request.args.get('email')
-    user = db.getUser(userName)
-    response = db.getAllConnections(user)
-    return jsonify({'relations': response}), 200
+def load_relations(email):
+    user = db.getUser(email)
+    self.relations = db.getAllConnections(user)
 
-@app.route('/entities', methods=['GET'])
 def load_entities():
     search = request.args.get('search')
     searchKey = request.args.get('searchKey')
-    searchResults = db.dumbSearch(searchKey, search)
-    return jsonify({'entities': searchResults}), 200
+    self.entities = db.dumbSearch(searchKey, search)

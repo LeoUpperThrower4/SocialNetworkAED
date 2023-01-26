@@ -44,52 +44,35 @@ class SimpleNet:
         if self.G == None:
             self.fromPkl()
 
-        return self.G.getVertex(id)
+        return self.G.getVertex(id)       
 
-    def isUser(self, user):
-        """
-        Return whether an user is in the network or not
-        """
-        return self.G.inGraph(user)        
-
-    def createAccount(self, email, password, tipo, name, hasPrivateName, hasPrivateEmail):
+    def createAccount(self, email, password, tipo, name, hasPrivateName):
         """
         Create account / add vertex to graph
         """
         if self.getUser(email) != None:
             return 'ALREADY_SIGNED_UP'
 
+        # Poderiamos adicionar outras informações aqui. Deixamos só uma pra exemplificar
         privateList = []
         if hasPrivateName:
             privateList.append("name")
-        if hasPrivateEmail:
-            privateList.append("email")
 
-        info = {"email": email, "name": name,  "password": password,
-                "private": privateList,
-                "type": tipo,
-                "friends": [], "acquaintances": [],
-                "familly": [], "orgs": []}
-        self.G.addVertex(email, info)
+        self.G.addVertex(email, 
+         {"email": email, "name": name,  "password": password,
+            "private": privateList,
+            "type": tipo})
         self.saveGraph()        
 
-    def getNodeRelationsNodes(self, userName, connectionsDict):
-        user = self.getUser(userName)
-        connectedNodesList = []
-        for nodeKey in connectionsDict.keys():
-            node = self.getUser(nodeKey).copy()
-            connectedNodesList.append(node)
-
-    def smartSearch(self, user, key, value, person=True):
+    def BFS(self, user, key, value, person=True):
         """
         Perform BFS to find user[key] = value
         """
         if key == "user":
             matches = self.G.BFS(
-                user, True, lambda v: v.value["person"] == person and v.key == value)
+                user, True, lambda v: value in v.key)
         else:
-            matches = self.G.BFS(user, True, lambda v: v.value["person"] == person and key in v.value["public"].keys(
-            ) and v.value["public"][key] == value)
+            matches = self.G.BFS(user, True, lambda v: key not in v.value["private"] and value in v.value.key )
         return matches
 
     def getConnection(self, user1, user2):
@@ -102,30 +85,31 @@ class SimpleNet:
         """
         Add edge between two users with weight = friend
         """
-        self.G.addEdge(user1.key, user2.key, weight="Amigo")
-        self.G.addEdge(user2.key, user1.key, weight="Amigo")
+        self.G.addEdge(user1.key, user2.key, weight="friend")
+        self.G.addEdge(user2.key, user1.key, weight="friend")
         self.saveGraph()
 
     def addAcquaintance(self, user1, user2):
         """
         Add edge between two users with weight = acquaintance
         """
-        self.G.addEdge(user1.key, user2.key, weight="Conhecido")
+        self.G.addEdge(user1.key, user2.key, weight="acquaintance")
         self.saveGraph()
 
     def addFamily(self, user1, user2):
         """
         Add edge between two users with weight = family
+        qual deveria ser a diferenca?
         """
-        self.G.addEdge(user1.key, user2.key, weight="Família")
-        self.G.addEdge(user2.key, user1.key, weight="Família")
+        self.G.addEdge(user1.key, user2.key, weight="family")
+        self.G.addEdge(user2.key, user1.key, weight="family")
         self.saveGraph()
 
     def addClient(self, user1, user2):
         """
         Add edge between two users with weight = client
         """
-        self.G.addEdge(user1.key, user2.key, weight="Cliente")
+        self.G.addEdge(user1.key, user2.key, weight="client")
         self.saveGraph()
 
     def removeFriendship(self, user1, user2):
@@ -159,7 +143,6 @@ class SimpleNet:
         self.saveGraph()
 
     def getAllConnections(self, user):
-
         # connections = copy.deepcopy(user.adjacent())
         print(user.adjacent)
         # return connections
@@ -196,35 +179,31 @@ class SimpleNet:
             subgraph = self.G
         DG = nx.DiGraph()
         for node in subgraph.vertices.keys():
-            DG.add_node(node)
+            user = self.getUser(node)
+            edgeStr = node if 'name' in user.value["private"] else user.value["name"] 
+            DG.add_node(edgeStr)
         edges = subgraph.getEdges()
 
         for v1, v2, w in edges:
-            if w == "Amigo":
+            if w == "friend":
                 color = "red"
-            elif w == "Conhecido":
+            elif w == "acquaintance":
                 color = "blue" 
-                # TODO: mudar cores?
-            elif w == "Família":
+            elif w == "family":
                 color = "green"
             else:
                 color = "black"
-            DG.add_edge(v1, v2, color=color)
+            user1 = self.getUser(v1)
+            user2 = self.getUser(v2)
+
+            edge1Str = v1 if 'name' in user1.value["private"] else user1.value["name"]                
+            edge2Str = v2 if 'name' in user2.value["private"] else user2.value["name"]                
+
+            DG.add_edge(edge1Str, edge2Str, color=color)
+
         pos = nx.circular_layout(DG)
         edges = DG.edges()
         colors = [DG[u][v]['color'] for u, v in edges]
         nx.draw(DG, pos, with_labels=True, edge_color=colors,
-                node_color="paleturquoise")
-        legend_elements = [
-            Line2D([0], [0], marker='o', color='w', label='Família',
-                   markerfacecolor='g', markersize=8),
-            Line2D([0], [0], marker='o', color='w', label='Amigo',
-                   markerfacecolor='r', markersize=8),
-            Line2D([0], [0], marker='o', color='w', label='Conhecido',
-                   markerfacecolor='blue', markersize=8),
-            Line2D([0], [0], marker='o', color='w', label='Cliente',
-                   markerfacecolor='black', markersize=8),
-        ]
-        plt.legend(handles=legend_elements, loc='upper right')
+                node_color="paleturquoise", arrowsize=20)
         plt.savefig("out/graph.jpg", dpi=1000)
-        plt.clf()
